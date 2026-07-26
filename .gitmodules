@@ -1,0 +1,3 @@
+[submodule "RP2350B_psram/micropython"]
+	path = RP2350B_psram/micropython
+	url = git@github.com:micropython/micropython.git

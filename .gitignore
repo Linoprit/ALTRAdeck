@@ -67,3 +67,4 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+/Schematics/ALPHAdeck_noctum/ALPHAdeck_noctum-backups
