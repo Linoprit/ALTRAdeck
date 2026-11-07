@@ -1,0 +1,126 @@
+
+# micropython from pimoroni branch, https://github.com/pimoroni/micropython.git
+git submodule update --init --recursive
+
+
+## Enable psram on rp2350b core
+# Add to ports/rp2/boards/WEACTSTUDIO_RP2350B_CORE/mpconfigboard.cmake
+# 8MB PSRAM on GPIO0.
+set(MICROPY_HW_ENABLE_PSRAM 1)
+set(MICROPY_HW_PSRAM_CS_PIN 0)
+
+# remove from ports/rp2/boards/WEACTSTUDIO_RP2350B_CORE/mpconfigboard.h
+#define MICROPY_HW_PSRAM_CS_PIN (0)
+#define MICROPY_HW_ENABLE_PSRAM (0)
+
+
+## build micropython
+# cd to micropython
+make -C mpy-cross
+
+# cd to mircopython/ports/rp2
+make V=1 BOARD=WEACTSTUDIO_RP2350B_CORE
+
+
+## Test psram
+import gc
+gc.mem_free()
+# => 8646352
+
+import micropython
+micropython.mem_info(1)
+# 00017400: ===============h===h==h====================================.....
+#        (373 lines all free)
+# 00074c00: ........................................
+# GC memory layout; from 1102eec0:
+#        (8004 lines all free)
+# 007d1000: ....................
+
+
+## build with user-modules
+make submodules
+make clean BOARD=WEACTSTUDIO_RP2350B_CORE
+make V=1 USER_C_MODULES=../../../altradeck BOARD=WEACTSTUDIO_RP2350B_CORE
+
+# Test submodules
+import module in micropython with:
+import example_package
+example_package.f()
+example_package.foo.f()
+example_package.foo.bar.f()
+
+
+Modules ToDo:
+- TFT lib
+- Sound lib
+- Keyboard USB / Bluetooth
+- ESP32 CoProc Services
+
+
+
+
+pimoroni:
+git clone https://github.com/pimoroni/micropython
+cd micropython
+git checkout pico2_w_2025_09_19
+git submodule update --init lib/pico-sdk
+git submodule update --init lib/cyw43-driver
+git submodule update --init lib/lwip
+git submodule update --init lib/mbedtls
+git submodule update --init lib/micropython-lib
+git submodule update --init lib/tinyusb
+git submodule update --init lib/btstack
+
+# ändern in /home/harald/WiFiBoards/Pimoroni/lipo_pico_2w_xl/pico-lipo/boards/pimoroni_pico_lipo2xl_w/usermodules.cmake =>  $ENV{LIPO_ROOT}/
+# erstellen in /home/harald/WiFiBoards/Pimoroni/lipo_pico_2w_xl/pico-lipo/modules/c/micropython-pico.cmake
+
+cd micropython/ports/rp2/
+export LIPO_ROOT=/home/harald/WiFiBoards/Pimoroni/lipo_pico_2w_xl/pico-lipo/
+cmake -S . -B build-PICO -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=$LIPO_ROOT/modules/c/micropython-pico.cmake  -DMICROPY_BOARD_DIR=$LIPO_ROOT/boards/pimoroni_pico_lipo2xl_w/ -DMICROPY_BOARD=pimoroni_pico_lipo2xl_w
+cmake --build build-PICO -j
+
+
+
+# mircorpython v1.29.0 lipo_pico_2w_xl
+cd micropython/ports/rp2/
+export LIPO_ROOT=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/
+cmake -S . -B build-PICO -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=$LIPO_ROOT/modules/c/micropython-pico.cmake  -DMICROPY_BOARD_DIR=$LIPO_ROOT/boards/pimoroni_pico_lipo2xl_w/ -DMICROPY_BOARD=pimoroni_pico_lipo2xl_w
+cmake --build build-PICO -j
+
+# psram test
+>>> import gc
+>>> gc.mem_free()
+8624848
+>>> import micropython
+>>> micropython.mem_info(1)
+ ====hBh=hhhhBhhhhhBDhhhhh=h=hhhBh=hhhh==hB..hhh=.......h=...h==.
+       (417 lines all free)
+00069800: ....................................................
+GC memory layout; from 1102eec0:
+       (8004 lines all free)
+007d1000: ....................
+
+
+# fxbuf test
+import altra.fxbuf
+fbuf = altra.fxbuf.FrameBuffer(bytearray(100 * 10 * 2), 100, 10, altra.fxbuf.RGB565)
+fbuf.fill(0)
+
+
+# mircorpython unix
+cd micropython/ports/unix
+export LIPO_ROOT=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/
+make USER_C_MODULES=$LIPO_ROOT/modules/c/
+
+make USER_C_MODULES=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/modules/c
+
+
+
+
+
+
+
+
+
+
+

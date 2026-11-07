@@ -1,0 +1,5 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "MySymLib")(type "KiCad")(uri "/home/harald/Documents/PlatformIO/Projects/ALPHAdeck/Schematics/libs/sym/MySymLib.kicad_sym")(options "")(descr ""))
+  (lib (name "tft_320x240")(type "KiCad")(uri "/home/harald/Documents/PlatformIO/Projects/ALPHAdeck/Schematics/libs/sym/tft_320x240.kicad_sym")(options "")(descr ""))
+)

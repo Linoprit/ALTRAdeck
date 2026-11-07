@@ -1,0 +1,6 @@
+reset
+halt
+loadbin /home/harald/Documents/PlatformIO/Projects/ALTRAdeck/RP2350B_psram/micropython/ports/rp2/build-WEACTSTUDIO_RP2350B_CORE//firmware.bin,0x10000000
+reset
+go
+exit
