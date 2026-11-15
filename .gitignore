@@ -68,3 +68,10 @@ vcpkg_installed/
 Testing/
 .cache/
 /Schematics/ALPHAdeck_noctum/ALPHAdeck_noctum-backups
+/Datasheets/
+/LipoPico2wXl/pico-lipo/modules/c/ili934x_tft/
+/Schematics/ALPHAdeck_noctum/ALPHAdeck_noctum.kicad_sch-bak
+/LipoPico2wXl/pico-lipo/modules/c/.mpy-workbench/.mpyignore
+/LipoPico2wXl/micropython/
+/LipoPico2wXl/py_unix/results
+/RP2350B_psram_delete/

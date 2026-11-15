@@ -102,8 +102,8 @@ GC memory layout; from 1102eec0:
 
 
 # fxbuf test
-import altra.fxbuf
-fbuf = altra.fxbuf.FrameBuffer(bytearray(100 * 10 * 2), 100, 10, altra.fxbuf.RGB565)
+import altra
+fbuf = altra.fxbuf.fxbuf(100, 10)
 fbuf.fill(0)
 
 
@@ -112,11 +112,33 @@ cd micropython/ports/unix
 export LIPO_ROOT=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/
 make USER_C_MODULES=$LIPO_ROOT/modules/c/
 
-make USER_C_MODULES=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/modules/c
+# fxbufset.c
+Create fxbufset.c and fxbufset.cpp. Put the python binding into the c-file, the methods into the cpp-file.
+fxbufset is a python object, that holds an array of references to fxbuf objects. They all must be of the
+same width, height and format.
+Refer to ~/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/micropython/extmod/modframebuf.c
+and fxbuf.c; modframebuf.c must not be modified, if there are new methods needed use fxbuf.c
+attributes:
+'bufset_obj' analog to modframebuf buf_obj
+'fbufs' array of references to fxbuf ojects
+'width' width of the contained fxbufs
+'height' height of the contained fxbufs
+'format' of the contained fxbufs
+'count' the amount of contained fxbufs
+methods:
+add_fxbuf(fxfbuf_object) add an existing framebuffer to fbufs array if it is of the same size as
+      the contained objects, increment count return true, if success;
+      if this is the first object added, set width, heigt, and format from it.
+get_count() return how many fxbufs are in the array
+get_fxbuf(index) return the fxbuf with index from the array
+load_fxbuf(filename, index) generate a stub for it, we specify it later.
 
-
-
-
+# read / write fxbuf to file
+Add methods to fxbuf, save_fxbuf and load_fxbuf for reading / writing fxbuf-objects to/from file.
+save_fxbuf(filename) writes two files out, the raw data contained in the bytearray is written to <filename>.data,
+the metadata width, height, format and stride is witten as json to <filename>.json.
+read_fxbuf(filename) reads both files back to the fxbuf object.
+<filename> has to be a string, suffixes like 'data' or 'json' are ignored.
 
 
 

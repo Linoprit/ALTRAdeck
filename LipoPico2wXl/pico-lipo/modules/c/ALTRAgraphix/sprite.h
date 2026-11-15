@@ -10,7 +10,6 @@ typedef struct _altra_sprite_obj_t {
     mp_int_t z_coord;
     mp_float_t rotation;
     mp_float_t scale;
-    mp_obj_t collis_box;
     mp_int_t collis_group;
     bool auto_anim;
     bool has_changed;
@@ -34,6 +33,7 @@ ALTRA_SPRITE_METHOD(get_id);
 ALTRA_SPRITE_SETTER(id);
 ALTRA_SPRITE_METHOD(get_pos);
 ALTRA_SPRITE_SETTER(pos);
+mp_obj_t altra_sprite_move(mp_obj_t self_in, mp_obj_t x_in, mp_obj_t y_in);
 ALTRA_SPRITE_METHOD(get_z_coord);
 ALTRA_SPRITE_SETTER(z_coord);
 ALTRA_SPRITE_METHOD(get_rotation);

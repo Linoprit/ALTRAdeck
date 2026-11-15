@@ -6,7 +6,7 @@ extern "C" {
 #include "py/runtime.h"
 #include "py/stream.h"
 #include "extmod/modmachine.h"
-//#include "extmod/modframebuf.h"
+#include "fxbuf.h"
 }
 
 #include <math.h>
@@ -155,7 +155,8 @@ static void display_block(lcd_tft_display_obj_t *self, mp_int_t x0, mp_int_t y0,
     }
     size_t width = static_cast<size_t>(x1 - x0 + 1);
     size_t height = static_cast<size_t>(y1 - y0 + 1);
-    if (height > SIZE_MAX / 2 || width > SIZE_MAX / (height * 2)) {
+    if (width == 0 || height == 0 || height > SIZE_MAX / 2
+        || width > SIZE_MAX / (height * 2)) {
         mp_raise_ValueError(MP_ERROR_TEXT("block dimensions are too large"));
     }
     size_t transfer_length = width * height * 2;
@@ -166,60 +167,26 @@ static void display_block(lcd_tft_display_obj_t *self, mp_int_t x0, mp_int_t y0,
                        static_cast<const uint8_t *>(buf.buf), transfer_length);
 }
 
-// takes very long time to transfer, but works
-static void display_block_framebuf(lcd_tft_display_obj_t *self, mp_int_t x0,
-                                   mp_int_t y0, mp_obj_t framebuf_obj) {
-#if MICROPY_PY_FRAMEBUF && !MICROPY_ENABLE_DYNRUNTIME
-    size_t width, height, stride;
-    if (!mp_framebuf_get_rgb565_info(framebuf_obj, &width, &height, &stride)) {
-        mp_raise_TypeError(MP_ERROR_TEXT("block expects an RGB565 FrameBuffer"));
+static void display_block_fxbuf(lcd_tft_display_obj_t *self, mp_int_t x0,
+                                mp_int_t y0, mp_obj_t fxbuf_obj) {
+    size_t width;
+    size_t height;
+    if (!altra_fxbuf_get_info(fxbuf_obj, &width, &height)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("expected an fxbuf framebuffer"));
     }
-    if (width == 0 || height == 0 || stride < width ||
-        height > SIZE_MAX / 2 || stride > SIZE_MAX / (height * 2) ||
-        width > SIZE_MAX / (height * 2)) {
+    if (height > SIZE_MAX / 2 || width > SIZE_MAX / (height * 2)) {
         mp_raise_ValueError(MP_ERROR_TEXT("invalid framebuffer dimensions"));
     }
 
     mp_buffer_info_t source;
-    mp_get_buffer_raise(framebuf_obj, &source, MP_BUFFER_READ);
-    size_t source_length = ((height - 1) * stride + width) * 2;
+    mp_get_buffer_raise(fxbuf_obj, &source, MP_BUFFER_READ);
     size_t transfer_length = width * height * 2;
-    if (source.len < source_length) {
+    if (source.len < transfer_length) {
         mp_raise_ValueError(MP_ERROR_TEXT("framebuffer buffer is too small"));
     }
 
-    constexpr size_t scratch_size = 4096;
-    mp_obj_t transfer_buffer = mp_obj_new_bytearray(
-        transfer_length < scratch_size ? transfer_length : scratch_size, nullptr);
-    mp_buffer_info_t destination;
-    mp_get_buffer_raise(transfer_buffer, &destination, MP_BUFFER_RW);
-    const uint8_t *source_bytes = static_cast<const uint8_t *>(source.buf);
-    uint8_t *destination_bytes = static_cast<uint8_t *>(destination.buf);
-    size_t pixel_count = width * height;
-    size_t max_chunk_pixels = destination.len / 2;
-    display_begin_block(self, x0, y0, x0 + width - 1, y0 + height - 1);
-    for (size_t first_pixel = 0; first_pixel < pixel_count;) {
-        size_t chunk_pixels = pixel_count - first_pixel;
-        if (chunk_pixels > max_chunk_pixels) {
-            chunk_pixels = max_chunk_pixels;
-        }
-        for (size_t i = 0; i < chunk_pixels; ++i) {
-            size_t pixel = first_pixel + i;
-            size_t source_index = ((pixel / width) * stride + pixel % width) * 2;
-            destination_bytes[i * 2] = source_bytes[source_index + 1];
-            destination_bytes[i * 2 + 1] = source_bytes[source_index];
-        }
-        display_transfer(self, destination_bytes, chunk_pixels * 2);
-        first_pixel += chunk_pixels;
-    }
-    display_call_pin(self->cs_pin, 1);
-#else
-    (void)self;
-    (void)x0;
-    (void)y0;
-    (void)framebuf_obj;
-    mp_raise_TypeError(MP_ERROR_TEXT("FrameBuffer support is not enabled"));
-#endif
+    display_send_block(self, x0, y0, x0 + width - 1, y0 + height - 1,
+                       static_cast<const uint8_t *>(source.buf), transfer_length);
 }
 
 static bool display_is_off_grid(lcd_tft_display_obj_t *self, mp_int_t xmin,
@@ -585,8 +552,8 @@ static mp_obj_t display_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t display_block_method(size_t n_args, const mp_obj_t *args) {
     if (n_args == 4) {
-        display_block_framebuf(display_from_obj(args[0]), mp_obj_get_int(args[1]),
-                               mp_obj_get_int(args[2]), args[3]);
+        display_block_fxbuf(display_from_obj(args[0]), mp_obj_get_int(args[1]),
+                            mp_obj_get_int(args[2]), args[3]);
     } else if (n_args == 6) {
         display_block(display_from_obj(args[0]), mp_obj_get_int(args[1]),
                       mp_obj_get_int(args[2]), mp_obj_get_int(args[3]),
@@ -598,6 +565,17 @@ static mp_obj_t display_block_method(size_t n_args, const mp_obj_t *args) {
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(display_block_obj, 4, 6, display_block_method);
+
+static mp_obj_t display_block_fxbuf_method(size_t n_args, const mp_obj_t *args) {
+    if (n_args != 4) {
+        mp_raise_TypeError(MP_ERROR_TEXT("block_fxbuf expects (x0, y0, fxbuf)"));
+    }
+    display_block_fxbuf(display_from_obj(args[0]), mp_obj_get_int(args[1]),
+                        mp_obj_get_int(args[2]), args[3]);
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(display_block_fxbuf_obj, 4, 4,
+    display_block_fxbuf_method);
 
 static mp_obj_t display_clear_method(size_t n_args, const mp_obj_t *args) {
     if (n_args < 1 || n_args > 3) mp_raise_TypeError(MP_ERROR_TEXT("clear expects 0 to 2 arguments"));
@@ -1045,6 +1023,10 @@ static void display_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
         else if (attr == MP_QSTR_rst) dest[0] = self->rst;
         else if (strcmp(name, "block") == 0) {
             dest[0] = MP_OBJ_FROM_PTR(&display_block_obj);
+            dest[1] = self_in;
+        }
+        else if (strcmp(name, "block_fxbuf") == 0) {
+            dest[0] = MP_OBJ_FROM_PTR(&display_block_fxbuf_obj);
             dest[1] = self_in;
         }
         else if (attr == MP_QSTR_width) dest[0] = mp_obj_new_int(self->width);

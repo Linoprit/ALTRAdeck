@@ -1,49 +1,78 @@
 #include "py/runtime.h"
-#include "modframebuf.h"
 
+#include "fxbuf.h"
 
-static mp_obj_t altra_fxbuf_framebuffer1(size_t n_args, const mp_obj_t *args) {
-    mp_obj_t framebuf_args[] = {
-        args[0],
-        args[1],
-        args[2],
-        MP_OBJ_NEW_SMALL_INT(0),
-        n_args == 4 ? args[3] : args[1],
-    };
-    return mp_call_function_n_kw(MP_OBJ_FROM_PTR(&mp_type_framebuf), 5, 0, framebuf_args);
+static mp_obj_t altra_fxbuf_save_fun(size_t n_args, const mp_obj_t *args) {
+    return altra_fxbuf_save_with_endian(args[0], args[1],
+        n_args == 3 && mp_obj_is_true(args[2]));
 }
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(altra_fxbuf_framebuffer1_obj, 3, 4, altra_fxbuf_framebuffer1);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(altra_fxbuf_save_obj, 2, 3,
+    altra_fxbuf_save_fun);
 
-static mp_obj_t altra_fxbuf_get_rgb565_info(mp_obj_t framebuffer_obj) {
-    size_t width;
-    size_t height;
-    size_t stride;
-    if (!mp_framebuf_get_rgb565_info(framebuffer_obj, &width, &height, &stride)) {
-        mp_raise_TypeError(MP_ERROR_TEXT("expected an RGB565 FrameBuffer"));
-    }
-    mp_obj_t info[] = {
-        mp_obj_new_int_from_uint(width),
-        mp_obj_new_int_from_uint(height),
-        mp_obj_new_int_from_uint(stride),
-    };
-    return mp_obj_new_tuple(MP_ARRAY_SIZE(info), info);
+static mp_obj_t altra_fxbuf_load_fun(size_t n_args, const mp_obj_t *args) {
+    return altra_fxbuf_load_from_file_with_endian(args[0],
+        n_args == 2 && mp_obj_is_true(args[1]));
 }
-static MP_DEFINE_CONST_FUN_OBJ_1(altra_fxbuf_get_rgb565_info_obj, altra_fxbuf_get_rgb565_info);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(altra_fxbuf_load_obj, 1, 2,
+    altra_fxbuf_load_fun);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_fxbuf_get_trans_col_obj,
+    altra_fxbuf_get_trans_col);
+static MP_DEFINE_CONST_FUN_OBJ_2(altra_fxbuf_set_trans_col_obj,
+    altra_fxbuf_set_trans_col);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_fxbuf_get_collis_box_obj,
+    altra_fxbuf_get_collis_box);
+static MP_DEFINE_CONST_FUN_OBJ_2(altra_fxbuf_set_collis_box_obj,
+    altra_fxbuf_set_collis_box);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_fxbuf_get_raw_obj, altra_fxbuf_get_raw);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_fxbuf_to_rgb565_obj,
+    altra_fxbuf_to_rgb565);
+static MP_DEFINE_CONST_FUN_OBJ_3(altra_fxbuf_to_color_obj,
+    altra_fxbuf_to_color);
+
+static mp_obj_t altra_fxbuf_fill_method(mp_obj_t self_in, mp_obj_t color_in) {
+    altra_fxbuf_fill(self_in, mp_obj_get_int(color_in));
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_2(altra_fxbuf_fill_obj, altra_fxbuf_fill_method);
+
+static mp_obj_t altra_fxbuf_blit_method(size_t n_args, const mp_obj_t *args) {
+    (void)n_args;
+    altra_fxbuf_blit(args[0], args[1], mp_obj_get_int(args[2]),
+        mp_obj_get_int(args[3]));
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(altra_fxbuf_blit_obj, 4, 4,
+    altra_fxbuf_blit_method);
+
+static const mp_rom_map_elem_t altra_fxbuf_locals_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&altra_fxbuf_save_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_trans_col), MP_ROM_PTR(&altra_fxbuf_get_trans_col_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_trans_col), MP_ROM_PTR(&altra_fxbuf_set_trans_col_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_collis_box), MP_ROM_PTR(&altra_fxbuf_get_collis_box_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_collis_box), MP_ROM_PTR(&altra_fxbuf_set_collis_box_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_raw), MP_ROM_PTR(&altra_fxbuf_get_raw_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&altra_fxbuf_fill_obj) },
+    { MP_ROM_QSTR(MP_QSTR_blit), MP_ROM_PTR(&altra_fxbuf_blit_obj) },
+};
+static MP_DEFINE_CONST_DICT(altra_fxbuf_locals, altra_fxbuf_locals_table);
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    mp_type_fxbuf,
+    MP_QSTR_fxbuf,
+    MP_TYPE_FLAG_NONE,
+    make_new, altra_fxbuf_make_new,
+    attr, altra_fxbuf_attr,
+    buffer, altra_fxbuf_get_buffer,
+    locals_dict, &altra_fxbuf_locals
+    );
 
 static const mp_rom_map_elem_t altra_fxbuf_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_altra_dot_fxbuf) },
-    { MP_ROM_QSTR(MP_QSTR_fxbuff), MP_ROM_PTR(&mp_type_framebuf) },
-    { MP_ROM_QSTR(MP_QSTR_FrameBuffer), MP_ROM_PTR(&mp_type_framebuf) },
-    { MP_ROM_QSTR(MP_QSTR_FrameBuffer1), MP_ROM_PTR(&altra_fxbuf_framebuffer1_obj) },
-    { MP_ROM_QSTR(MP_QSTR_MVLSB), MP_ROM_INT(0) },
-    { MP_ROM_QSTR(MP_QSTR_MONO_VLSB), MP_ROM_INT(0) },
-    { MP_ROM_QSTR(MP_QSTR_RGB565), MP_ROM_INT(1) },
-    { MP_ROM_QSTR(MP_QSTR_GS2_HMSB), MP_ROM_INT(5) },
-    { MP_ROM_QSTR(MP_QSTR_GS4_HMSB), MP_ROM_INT(2) },
-    { MP_ROM_QSTR(MP_QSTR_GS8), MP_ROM_INT(6) },
-    { MP_ROM_QSTR(MP_QSTR_MONO_HLSB), MP_ROM_INT(3) },
-    { MP_ROM_QSTR(MP_QSTR_MONO_HMSB), MP_ROM_INT(4) },
-    { MP_ROM_QSTR(MP_QSTR_get_rgb565_info), MP_ROM_PTR(&altra_fxbuf_get_rgb565_info_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fxbuf), MP_ROM_PTR(&mp_type_fxbuf) },
+    { MP_ROM_QSTR(MP_QSTR_fxbuff), MP_ROM_PTR(&mp_type_fxbuf) },
+    { MP_ROM_QSTR(MP_QSTR_load), MP_ROM_PTR(&altra_fxbuf_load_obj) },
+    { MP_ROM_QSTR(MP_QSTR_to_rgb565), MP_ROM_PTR(&altra_fxbuf_to_rgb565_obj) },
+    { MP_ROM_QSTR(MP_QSTR_to_color), MP_ROM_PTR(&altra_fxbuf_to_color_obj) },
 };
 static MP_DEFINE_CONST_DICT(altra_fxbuf_globals, altra_fxbuf_globals_table);
 

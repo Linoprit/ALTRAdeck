@@ -2,11 +2,11 @@ extern "C" {
 #include "py/objlist.h"
 #include "py/runtime.h"
 
+#include "fxbuf.h"
 #include "fxbufset.h"
 #include "sprite.h"
 
 extern const mp_obj_type_t mp_type_point;
-extern const mp_obj_type_t mp_type_poly;
 
 static mp_uint_t altra_sprite_next_id;
 
@@ -17,6 +17,15 @@ static altra_sprite_obj_t *altra_sprite_from_obj(mp_obj_t self_in) {
 static size_t altra_sprite_fxset_count(mp_obj_t fxset) {
     const auto *set = static_cast<const altra_fxbufset_obj_t *>(MP_OBJ_TO_PTR(fxset));
     return set->count;
+}
+
+static mp_obj_t altra_sprite_current_fxbuf(altra_sprite_obj_t *self) {
+    const auto *set = static_cast<const altra_fxbufset_obj_t *>(
+        MP_OBJ_TO_PTR(self->fxset));
+    if (self->fx_idx >= set->count) {
+        mp_raise_msg(&mp_type_IndexError, MP_ERROR_TEXT("sprite fx_idx out of range"));
+    }
+    return set->fbufs[self->fx_idx];
 }
 
 mp_obj_t altra_sprite_make_new(const mp_obj_type_t *type, size_t n_args,
@@ -33,8 +42,6 @@ mp_obj_t altra_sprite_make_new(const mp_obj_type_t *type, size_t n_args,
     self->z_coord = 0;
     self->rotation = 0;
     self->scale = 1;
-    self->collis_box = mp_call_function_1(MP_OBJ_FROM_PTR(&mp_type_poly),
-        mp_obj_new_list(0, NULL));
     self->collis_group = 0;
     self->auto_anim = false;
     self->has_changed = false;
@@ -64,6 +71,18 @@ mp_obj_t altra_sprite_set_pos(mp_obj_t self_in, mp_obj_t value_in) {
     self->pos = value_in;
     self->has_changed = true;
     return mp_const_none;
+}
+
+mp_obj_t altra_sprite_move(mp_obj_t self_in, mp_obj_t x_in, mp_obj_t y_in) {
+    mp_int_t dx = mp_obj_get_int(x_in);
+    mp_int_t dy = mp_obj_get_int(y_in);
+    mp_obj_t pos = altra_sprite_get_pos(self_in);
+    mp_obj_t x = mp_binary_op(MP_BINARY_OP_ADD, mp_load_attr(pos, MP_QSTR_x),
+        mp_obj_new_int(dx));
+    mp_obj_t y = mp_binary_op(MP_BINARY_OP_ADD, mp_load_attr(pos, MP_QSTR_y),
+        mp_obj_new_int(dy));
+    mp_obj_t new_pos = mp_call_function_2(MP_OBJ_FROM_PTR(&mp_type_point), x, y);
+    return altra_sprite_set_pos(self_in, new_pos);
 }
 
 mp_obj_t altra_sprite_get_z_coord(mp_obj_t self_in) {
@@ -100,15 +119,13 @@ mp_obj_t altra_sprite_set_scale(mp_obj_t self_in, mp_obj_t value_in) {
 }
 
 mp_obj_t altra_sprite_get_collis_box(mp_obj_t self_in) {
-    return altra_sprite_from_obj(self_in)->collis_box;
+    return altra_fxbuf_get_collis_box(
+        altra_sprite_current_fxbuf(altra_sprite_from_obj(self_in)));
 }
 
 mp_obj_t altra_sprite_set_collis_box(mp_obj_t self_in, mp_obj_t value_in) {
-    if (!mp_obj_is_type(value_in, &mp_type_poly)) {
-        mp_raise_TypeError(MP_ERROR_TEXT("collis_box must be a poly"));
-    }
     altra_sprite_obj_t *self = altra_sprite_from_obj(self_in);
-    self->collis_box = value_in;
+    altra_fxbuf_set_collis_box(altra_sprite_current_fxbuf(self), value_in);
     self->has_changed = true;
     return mp_const_none;
 }
