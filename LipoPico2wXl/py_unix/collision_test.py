@@ -118,8 +118,11 @@ assert not has_pair(
 
 save_path = "collision_test_frame"
 try:
-    frame_a.get_fxset().get_fxbuf(0).save(save_path)
+    frame_a_fxbuf = frame_a.get_fxset().get_fxbuf(0)
+    frame_a_fxbuf.set_trans_col(0x123456)
+    frame_a_fxbuf.save(save_path)
     loaded = altra.fxbuf.load(save_path)
+    assert loaded.get_trans_col() == 0x123456
     loaded_points = loaded.get_collis_box().points
     assert len(loaded_points) == 3
     assert (loaded_points[0].x, loaded_points[0].y) == (-1, 2)
@@ -127,6 +130,7 @@ try:
     with open(save_path + ".json", "w") as metadata:
         metadata.write('{"width":4,"height":4}\n')
     legacy = altra.fxbuf.load(save_path)
+    assert legacy.get_trans_col() == 0
     assert legacy.get_collis_box().points == []
 finally:
     files = os.listdir()

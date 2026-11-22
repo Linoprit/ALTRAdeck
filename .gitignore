@@ -75,3 +75,6 @@ Testing/
 /LipoPico2wXl/micropython/
 /LipoPico2wXl/py_unix/results
 /RP2350B_psram_delete/
+*.pyc
+/.gitmodules__
+/Zeichnung.svg

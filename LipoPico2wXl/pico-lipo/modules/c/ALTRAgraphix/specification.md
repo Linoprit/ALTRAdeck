@@ -60,6 +60,10 @@ Methods and module functions:
   integer (`0xRRGGBB`).
 
 
+### The fxbuf image-data format
+Is described in ALTRAimagesuite, located in <project-root>/ALTRAimagesuite/specification.md
+
+
 ### class fxbufset
 Create fxbufset.c and fxbufset.cpp. Put the python binding into the c-file, the methods into the cpp-file.
 fxbufset is a Python object that holds an array of references to RGB565 fxbuf
@@ -215,19 +219,3 @@ Canvas attributes `enable_aabb`, `enable_sta`, `enable_ent`, and `enable_pixelwi
 - Lines, circles, etc. in fxbuf
 - Test for all classes and methods;
 - ALTRAdeck specification; Sound...
-
-
-
-# ALTRAimager Specification
-To convert and resize common image formats, to define the collis_box polygon and to convert true type fonts to fx-fonts. It is written in Python, thus works on all common plattforms. It writes the fxbuf data format, the image as data file and associated meta data as json. 
-
-Font conversion is not subject of this first version.
-
-The UI shows a centered drawing area where the image is shown and manipulated.
-The menu bar shows entries for File, Edit, About.
-- The File menu has functions to load the fxbuf-format, import all common image formats and save fxbuf data format. 
-- The Edit menu has entries to scale the image and to activate the collis_box drawing function.
-- When the collis_box drawing function is active, the user can define  points, forming the polygon by clicking into the image. The points are displayed as crosses in the corresponding pixels, the crosses are connected by lines. The points can be deleted, added, moved or reordered within the collis_box list.
-- on the left side, there is a button bar with an arrow button to select collis-points, a plus button to add points, a minus button to remove points, and...
-- ToDo...
-- 

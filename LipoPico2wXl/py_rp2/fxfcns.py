@@ -22,6 +22,14 @@ def create_fxbufset_20():
                         True)  ## swap endian
     return my_fxbufset
 
+def create_fxbufset_32():
+    my_fxbufset = \
+    fxset.load_fxbufset("./fxbufs/Spaceship_32_01", 
+                        "./fxbufs/Spaceship_32_02", 
+                        "./fxbufs/Spaceship_32_03", 
+                        "./fxbufs/Spaceship_32_04",
+                        True)  ## swap endian
+    return my_fxbufset
 
 def create_fxbufset_48():
     my_fxbufset = \
@@ -36,6 +44,11 @@ def create_fxbufset_48():
     my_fxbufset.get_fxbuf(3).set_trans_col(0xffffff)
     return my_fxbufset
 
+def create_fxbufset_bullet():
+    my_fxbufset = \
+    fxset.load_fxbufset("./fxbufs/Bullet_01", True)
+    return my_fxbufset
+
 
 def create_sprite_20():
     fxset = create_fxbufset_20()
@@ -43,8 +56,20 @@ def create_sprite_20():
     return my_sprite
 
 
+def create_sprite_32():
+    fxset = create_fxbufset_32()
+    my_sprite = sprite(fxset)
+    return my_sprite
+
+
 def create_sprite_48():
     fxset = create_fxbufset_48()
+    my_sprite = sprite(fxset)
+    return my_sprite
+
+
+def create_sprite_bullet():
+    fxset = create_fxbufset_bullet()
     my_sprite = sprite(fxset)
     return my_sprite
 
