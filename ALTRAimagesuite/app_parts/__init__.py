@@ -1,0 +1,1 @@
+"""Application parts package initialization."""

@@ -520,8 +520,9 @@ mp_obj_t altra_fxbuf_save_with_endian(mp_obj_t self_in, mp_obj_t filename_in,
 
     vstr_t metadata;
     vstr_init(&metadata, 64);
-    vstr_printf(&metadata, "{\"width\":%u,\"height\":%u,\"collis_box\":[",
-        (unsigned)width, (unsigned)height);
+    vstr_printf(&metadata,
+        "{\"width\":%u,\"height\":%u,\"trans_col\":%d,\"collis_box\":[",
+        (unsigned)width, (unsigned)height, (int)self->trans_col);
     mp_obj_t points_obj = mp_load_attr(self->collis_box, MP_QSTR_points);
     size_t point_count;
     mp_obj_t *points;
@@ -580,6 +581,11 @@ mp_obj_t altra_fxbuf_load_from_file_with_endian(mp_obj_t filename_in,
     size_t height;
     bool valid = altra_fxbuf_read_json_uint(json, "width", &width)
         && altra_fxbuf_read_json_uint(json, "height", &height);
+    size_t trans_col = 0;
+    if (valid && strstr(json, "\"trans_col\"") != NULL) {
+        valid = altra_fxbuf_read_json_uint(json, "trans_col", &trans_col)
+            && trans_col <= 0xffffff;
+    }
     mp_obj_t collis_box = MP_OBJ_NULL;
     if (valid) {
         valid = altra_fxbuf_read_json_collis_box(json, &collis_box);
@@ -598,6 +604,7 @@ mp_obj_t altra_fxbuf_load_from_file_with_endian(mp_obj_t filename_in,
         altra_fxbuf_swap_rgb565_endian(buffer, width, height);
     }
     mp_obj_t fxbuf = altra_fxbuf_wrap(buffer, width, height);
+    altra_fxbuf_set_trans_col(fxbuf, mp_obj_new_int_from_uint(trans_col));
     if (collis_box != MP_OBJ_NULL) {
         altra_fxbuf_set_collis_box(fxbuf, collis_box);
     }
