@@ -4,6 +4,8 @@
 
 static MP_DEFINE_CONST_FUN_OBJ_1(altra_sprite_get_id_obj, altra_sprite_get_id);
 static MP_DEFINE_CONST_FUN_OBJ_2(altra_sprite_set_id_obj, altra_sprite_set_id);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_sprite_get_name_obj, altra_sprite_get_name);
+static MP_DEFINE_CONST_FUN_OBJ_2(altra_sprite_set_name_obj, altra_sprite_set_name);
 static MP_DEFINE_CONST_FUN_OBJ_1(altra_sprite_get_pos_obj, altra_sprite_get_pos);
 static MP_DEFINE_CONST_FUN_OBJ_2(altra_sprite_set_pos_obj, altra_sprite_set_pos);
 static MP_DEFINE_CONST_FUN_OBJ_3(altra_sprite_move_obj, altra_sprite_move);
@@ -36,6 +38,8 @@ static const mp_rom_map_elem_t altra_sprite_locals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_LO_RIGHT), MP_ROM_INT(4) },
     { MP_ROM_QSTR(MP_QSTR_get_id), MP_ROM_PTR(&altra_sprite_get_id_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_id), MP_ROM_PTR(&altra_sprite_set_id_obj) },
+    { MP_ROM_QSTR(MP_QSTR_get_name), MP_ROM_PTR(&altra_sprite_get_name_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_name), MP_ROM_PTR(&altra_sprite_set_name_obj) },
     { MP_ROM_QSTR(MP_QSTR_get_pos), MP_ROM_PTR(&altra_sprite_get_pos_obj) },
     { MP_ROM_QSTR(MP_QSTR_set_pos), MP_ROM_PTR(&altra_sprite_set_pos_obj) },
     { MP_ROM_QSTR(MP_QSTR_move), MP_ROM_PTR(&altra_sprite_move_obj) },

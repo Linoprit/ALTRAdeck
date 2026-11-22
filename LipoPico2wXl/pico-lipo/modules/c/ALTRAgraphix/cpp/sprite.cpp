@@ -2,6 +2,8 @@ extern "C" {
 #include "py/objlist.h"
 #include "py/runtime.h"
 
+#include <string.h>
+
 #include "fxbuf.h"
 #include "fxbufset.h"
 #include "sprite.h"
@@ -28,6 +30,22 @@ static mp_obj_t altra_sprite_current_fxbuf(altra_sprite_obj_t *self) {
     return set->fbufs[self->fx_idx];
 }
 
+static size_t altra_sprite_name_length(const char *data, size_t length) {
+    size_t copied = 0;
+    while (copied < length) {
+        unsigned char first = (unsigned char)data[copied];
+        size_t character_length = first < 0x80 ? 1
+            : (first & 0xe0) == 0xc0 ? 2
+            : (first & 0xf0) == 0xe0 ? 3
+            : 4;
+        if (copied + character_length > ALTRA_SPRITE_NAME_SIZE) {
+            break;
+        }
+        copied += character_length;
+    }
+    return copied;
+}
+
 mp_obj_t altra_sprite_make_new(const mp_obj_type_t *type, size_t n_args,
     size_t n_kw, const mp_obj_t *args) {
     mp_arg_check_num(n_args, n_kw, 1, 1, false);
@@ -36,7 +54,10 @@ mp_obj_t altra_sprite_make_new(const mp_obj_type_t *type, size_t n_args,
     }
 
     altra_sprite_obj_t *self = mp_obj_malloc(altra_sprite_obj_t, type);
+    char initial_name[ALTRA_SPRITE_NAME_SIZE] = {0};
     self->id = altra_sprite_next_id++;
+    self->name = mp_obj_new_bytearray(sizeof(initial_name), initial_name);
+    self->name_len = 0;
     self->pos = mp_call_function_2(MP_OBJ_FROM_PTR(&mp_type_point),
         MP_OBJ_NEW_SMALL_INT(0), MP_OBJ_NEW_SMALL_INT(0));
     self->z_coord = 0;
@@ -56,6 +77,30 @@ mp_obj_t altra_sprite_get_id(mp_obj_t self_in) {
 
 mp_obj_t altra_sprite_set_id(mp_obj_t self_in, mp_obj_t value_in) {
     altra_sprite_from_obj(self_in)->id = mp_obj_get_int(value_in);
+    return mp_const_none;
+}
+
+mp_obj_t altra_sprite_get_name(mp_obj_t self_in) {
+    altra_sprite_obj_t *self = altra_sprite_from_obj(self_in);
+    mp_buffer_info_t buffer;
+    mp_get_buffer_raise(self->name, &buffer, MP_BUFFER_READ);
+    return mp_obj_new_str((const char *)buffer.buf, self->name_len);
+}
+
+mp_obj_t altra_sprite_set_name(mp_obj_t self_in, mp_obj_t value_in) {
+    if (!mp_obj_is_str(value_in)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("name must be a string"));
+    }
+
+    size_t input_len;
+    const char *input = mp_obj_str_get_data(value_in, &input_len);
+    size_t copied = altra_sprite_name_length(input, input_len);
+    altra_sprite_obj_t *self = altra_sprite_from_obj(self_in);
+    mp_buffer_info_t buffer;
+    mp_get_buffer_raise(self->name, &buffer, MP_BUFFER_WRITE);
+    memset(buffer.buf, 0, buffer.len);
+    memcpy(buffer.buf, input, copied);
+    self->name_len = copied;
     return mp_const_none;
 }
 

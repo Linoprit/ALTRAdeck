@@ -3,9 +3,13 @@
 
 #include "py/obj.h"
 
+#define ALTRA_SPRITE_NAME_SIZE (16)
+
 typedef struct _altra_sprite_obj_t {
     mp_obj_base_t base;
     mp_int_t id;
+    mp_obj_t name;
+    size_t name_len;
     mp_obj_t pos;
     mp_int_t z_coord;
     mp_float_t rotation;
@@ -31,6 +35,8 @@ mp_obj_t altra_sprite_make_new(const mp_obj_type_t *type, size_t n_args,
 
 ALTRA_SPRITE_METHOD(get_id);
 ALTRA_SPRITE_SETTER(id);
+ALTRA_SPRITE_METHOD(get_name);
+ALTRA_SPRITE_SETTER(name);
 ALTRA_SPRITE_METHOD(get_pos);
 ALTRA_SPRITE_SETTER(pos);
 mp_obj_t altra_sprite_move(mp_obj_t self_in, mp_obj_t x_in, mp_obj_t y_in);

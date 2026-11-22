@@ -52,6 +52,7 @@ mp_obj_t altra_canvas_do_sta_detection(mp_obj_t self_in, mp_obj_t pairs_in);
 mp_obj_t altra_canvas_do_ent_detection(mp_obj_t self_in, mp_obj_t pairs_in);
 mp_obj_t altra_canvas_do_pixelwise_detection(mp_obj_t self_in, mp_obj_t pairs_in);
 mp_obj_t altra_canvas_add_sprite(mp_obj_t self_in, mp_obj_t sprite_in);
+mp_obj_t altra_canvas_reorder_objects(mp_obj_t self_in);
 mp_obj_t altra_canvas_cycle(mp_obj_t self_in, mp_obj_t timeout_in);
 void altra_canvas_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
 

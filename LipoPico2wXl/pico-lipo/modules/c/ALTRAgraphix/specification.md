@@ -15,8 +15,8 @@ in dir py_unix:
 ```
 cd micropython/ports/rp2
 export LIPO_ROOT=/home/harald/Documents/PlatformIO/Projects/ALTRAdeck/LipoPico2wXl/pico-lipo/
-cmake -S . -B build-PICO -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=$LIPO_ROOT/modules/c/micropython-pico.cmake  -DMICROPY_BOARD_DIR=$LIPO_ROOT/boards/pimoroni_pico_lipo2xl_w/ -DMICROPY_BOARD=pimoroni_pico_lipo2xl_w
-cmake --build build-PICO
+cmake -S . -B build-LIPO2XL -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=$LIPO_ROOT/modules/c/micropython-pico.cmake  -DMICROPY_BOARD_DIR=$LIPO_ROOT/boards/pimoroni_pico_lipo2xl_w/ -DMICROPY_BOARD=pimoroni_pico_lipo2xl_w
+cmake --build build-LIPO2XL
 ```
 
 ## Restriction
@@ -107,6 +107,7 @@ Constants:
 
 Attributes:
 - id: integer, generated at object construction
+- name: 16-byte bytearray, initially empty
 - pos: altra.types.point 
 - z_coord: int
 - rotation: float
@@ -128,6 +129,9 @@ and `set_collis_box(value)` access the polygon on its current fxbuf. Changing
 
 Methods:
 Every attribute has matching get_<attribute>() and set_<attribute>(value) methods.
+`get_name()` returns the stored name as a string. `set_name(value)` accepts a
+string and truncates it to fit the 16-byte buffer, without splitting a UTF-8
+character.
 `move(x, y)` adds the signed integer offsets to the current position.
 set_pos, set_rotation, set_z_coord, set_scale, set_collis_box, set_fx_idx, inc_fx_idx,
 dec_fx_idx, and move set has_changed.
@@ -155,6 +159,7 @@ get_width(), get_height(), get_bkg_col(), get_content(), get_count(), get_fxbuf(
 transfer_done(), is_transfered(), is_new_frame(),
 await_new_frame(timeout_ms), render(), await_transfer(timeout_ms)
 add_sprite(sprite): inserts a sprite into content in ascending z_coord order and updates count. If two sprites have the same z_coord, the newly added one is placed behind the existing sprite.
+reorder_objects(): sorts content in ascending z_coord order, preserving the existing order of sprites with equal z_coord.
 The canvas owns two framebuffers: an object buffer rendered by `render()` and a
 display buffer read by the display thread. `render()` fills the object buffer with
 `bkg_col` and blits each sprite's selected fxbuf at its position, from content item

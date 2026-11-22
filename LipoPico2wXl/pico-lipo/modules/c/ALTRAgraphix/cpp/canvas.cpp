@@ -606,6 +606,35 @@ mp_obj_t altra_canvas_add_sprite(mp_obj_t self_in, mp_obj_t sprite_in) {
     return mp_const_none;
 }
 
+mp_obj_t altra_canvas_reorder_objects(mp_obj_t self_in) {
+    altra_canvas_obj_t *self = altra_canvas_from_obj(self_in);
+    altra_canvas_sync(self);
+
+    for (size_t i = 0; i < self->count; ++i) {
+        if (!mp_obj_is_type(self->content[i], &mp_type_sprite)) {
+            mp_raise_TypeError(MP_ERROR_TEXT("canvas content must contain sprites"));
+        }
+    }
+
+    for (size_t i = 1; i < self->count; ++i) {
+        mp_obj_t current = self->content[i];
+        const auto *current_sprite = static_cast<const altra_sprite_obj_t *>(
+            MP_OBJ_TO_PTR(current));
+        size_t index = i;
+        while (index > 0) {
+            const auto *previous_sprite = static_cast<const altra_sprite_obj_t *>(
+                MP_OBJ_TO_PTR(self->content[index - 1]));
+            if (previous_sprite->z_coord <= current_sprite->z_coord) {
+                break;
+            }
+            self->content[index] = self->content[index - 1];
+            --index;
+        }
+        self->content[index] = current;
+    }
+    return mp_const_none;
+}
+
 mp_obj_t altra_canvas_render(mp_obj_t self_in) {
     altra_canvas_obj_t *self = altra_canvas_from_obj(self_in);
     altra_canvas_sync(self);

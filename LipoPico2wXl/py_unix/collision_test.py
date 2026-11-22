@@ -33,6 +33,32 @@ other_group.set_collis_group(2)
 for sprite in (first, second, far, other_group):
     canvas.add_sprite(sprite)
 
+reorder_canvas = altra.canvas(8, 8, 0)
+lower, _ = make_sprite(0, 0)
+middle, _ = make_sprite(0, 0)
+upper, _ = make_sprite(0, 0)
+lower.set_z_coord(0)
+middle.set_z_coord(1)
+upper.set_z_coord(2)
+for sprite in (lower, middle, upper):
+    reorder_canvas.add_sprite(sprite)
+lower.set_z_coord(2)
+middle.set_z_coord(0)
+assert reorder_canvas.reorder_objects() is None
+reordered = reorder_canvas.get_content()
+assert reordered[0] is middle
+assert reordered[1] is lower
+assert reordered[2] is upper
+
+named_sprite, _ = make_sprite(0, 0)
+assert named_sprite.get_name() == ""
+named_sprite.set_name("0123456789abcdefg")
+assert named_sprite.get_name() == "0123456789abcdef"
+named_sprite.set_name("abcdefghijklmnoé")
+assert named_sprite.get_name() == "abcdefghijklmno"
+named_sprite.set_name("short")
+assert named_sprite.get_name() == "short"
+
 pairs = canvas.do_aabb_detection()
 assert has_pair(pairs, first, second)
 assert not has_pair(pairs, first, far)

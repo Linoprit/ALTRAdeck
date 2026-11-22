@@ -28,6 +28,8 @@ static MP_DEFINE_CONST_FUN_OBJ_2(altra_canvas_do_ent_detection_obj,
 static MP_DEFINE_CONST_FUN_OBJ_2(altra_canvas_do_pixelwise_detection_obj,
     altra_canvas_do_pixelwise_detection);
 static MP_DEFINE_CONST_FUN_OBJ_2(altra_canvas_add_sprite_obj, altra_canvas_add_sprite);
+static MP_DEFINE_CONST_FUN_OBJ_1(altra_canvas_reorder_objects_obj,
+    altra_canvas_reorder_objects);
 static MP_DEFINE_CONST_FUN_OBJ_2(altra_canvas_cycle_obj, altra_canvas_cycle);
 
 static const mp_rom_map_elem_t altra_canvas_locals_table[] = {
@@ -52,6 +54,8 @@ static const mp_rom_map_elem_t altra_canvas_locals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_do_pixelwise_detection),
         MP_ROM_PTR(&altra_canvas_do_pixelwise_detection_obj) },
     { MP_ROM_QSTR(MP_QSTR_add_sprite), MP_ROM_PTR(&altra_canvas_add_sprite_obj) },
+    { MP_ROM_QSTR(MP_QSTR_reorder_objects),
+        MP_ROM_PTR(&altra_canvas_reorder_objects_obj) },
     { MP_ROM_QSTR(MP_QSTR_cycle), MP_ROM_PTR(&altra_canvas_cycle_obj) },
 };
 static MP_DEFINE_CONST_DICT(altra_canvas_locals, altra_canvas_locals_table);

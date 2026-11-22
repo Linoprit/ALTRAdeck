@@ -6,9 +6,9 @@ import _thread
 import time
 import fxfcns
 import displayfcns
+import altra
 from altra import types as tp
 import displayfcns
-from py_rp2.fxbuf_test import print_thread2_msg
 #import mountsd
 
 
@@ -22,13 +22,13 @@ def create_canvas():
   ship_sprite = fxfcns.create_sprite_32()
   ship_sprite.set_pos(tp.point(200, 120))
   ship_sprite.set_z_coord(5)
-  ship_sprite.set_collis_group(1)
+  ship_sprite.set_collis_group(2)
   my_canvas.add_sprite(ship_sprite)
 
   bullet_sprite = fxfcns.create_sprite_bullet()
-  bullet_sprite.set_pos(tp.point(210, 0))
-  bullet_sprite.set_z_coord(1)
-  bullet_sprite.set_collis_group(1)
+  bullet_sprite.set_pos(tp.point(187, 0))
+  bullet_sprite.set_z_coord(2)
+  bullet_sprite.set_collis_group(2)
   my_canvas.add_sprite(bullet_sprite)
 
   my_background = fxfcns.create_background()
@@ -38,7 +38,7 @@ def create_canvas():
 
   return my_canvas  
 
-def transfer(display):
+def transfer(display, my_canvas):
     display.block_fxbuf(0, 0, my_canvas.get_fxbuf())
     my_canvas.transfer_done()
 
@@ -53,10 +53,10 @@ def core2_task(display, my_canvas):
             time.sleep_ms(1)
             continue
         
-        start = ticks_ms()
-        transfer(display)
-        end = ticks_ms()
-        thread2_messages.append(f'Transfered buffer in {end - start} ms.')
+        #start = ticks_ms()
+        transfer(display, my_canvas)
+        #end = ticks_ms()
+        #thread2_messages.append(f'Transfered buffer in {end - start} ms.')
 
 
 def print_core2_msg():
@@ -72,19 +72,55 @@ def test_collision():
   _thread.start_new_thread(core2_task, (display, my_canvas))
 
   bullet = my_canvas.get_content()[1]
+  bullet_name = bullet.get_name()
   ship = my_canvas.get_content()[2]
+  ship_name = ship.get_name()
+  
+  bkg_name = my_canvas.get_content()[0].get_name()
+  
+  print(f"bullet_id: {bullet_name} / ship_id: {ship_name} / bkg_id: {bkg_name}")  
 
-  for i in range(30):
-    bullet.move(0, 5)
+  for i in range(80):
+    bullet.move(0, 2)
 
     my_canvas.render()
+    start = ticks_ms()
     aabb_collisions = my_canvas.do_aabb_detection()
+    end = ticks_ms()
+    aabb_time = end - start
+    
+    start = ticks_ms()    
+    sta_collisions = my_canvas.do_sta_detection(aabb_collisions)
+    end = ticks_ms()
+    sta_time = end - start
+    
+    start = ticks_ms()    
+    ent_collisions = my_canvas.do_ent_detection(aabb_collisions)
+    end = ticks_ms()
+    ent_time = end - start
+    
+    start = ticks_ms()    
+    pix_collisions = my_canvas.do_pixelwise_detection(aabb_collisions)
+    end = ticks_ms()
+    pix_time = end - start
+
+    print(f"frame {i}: aabb {aabb_time}, sta {sta_time}, ent {ent_time}, pix {pix_time}")  
 
     if aabb_collisions:
       for sprite1, sprite2 in aabb_collisions:
-        print(f"collis obj {sprite1.get_id()} with {sprite2.get_id()}")
+        print(f"aabb obj {sprite1.get_name()} with {sprite2.get_name()}")
+      for sprite1, sprite2 in sta_collisions:
+        print(f"sta obj {sprite1.get_name()} with {sprite2.get_name()}")
+      for sprite1, sprite2 in ent_collisions:
+        print(f"ent obj {sprite1.get_name()} with {sprite2.get_name()}")
+      for sprite1, sprite2 in pix_collisions:
+        print(f"pix obj {sprite1.get_name()} with {sprite2.get_name()}")
     
-    print_core2_msg() 
+    print_core2_msg()
+    
+    if not my_canvas.await_transfer(1000):
+            print("Timed out waiting for display transfer.")
+            break
 
 
 test_collision()
