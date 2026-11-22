@@ -143,3 +143,4 @@ pytest -v
 - Add method to save current file. If the file was already saved in fxbuf-format, 
   overwrite it. If not open the 'save fxbuf' dialog.
 - when we open or save a file, keep last accessed directory and use it for the next file dialog.
+
